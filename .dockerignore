@@ -1,0 +1,7 @@
+.dockerignore
+docker-compose.yaml
+dockerfile.quote-api
+README.md
+LICENSE
+makefile
+.gitignore

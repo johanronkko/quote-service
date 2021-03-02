@@ -1,0 +1,5 @@
+INSERT INTO quotes (quote_id, package_weight, shipment_cost, to_name, to_email, to_address, to_country_code, from_name, from_email, from_address, from_country_code) VALUES
+	('1cf37266-3473-4006-984f-9325122678b7', 45, 1250, 'Sven Svensson', 'sven.svensson@example.com', 'Teststreet 42A, CityA 12345', 'SE', 'John Doe', 'john.doe@example.com', 'Teststreet 42B, CityB 12345', 'US'),
+    ('25b5fbd3-755f-4379-8f07-a58d4a30fa2f', 45, 500, 'Johan Doe', 'john.doe@example.com', 'Teststreet 42B, CityB 12345', 'US', 'Sven Svensson', 'sven.svensson@example.com', 'Teststreet 42A, CityA 12345', 'SE'),
+    ('32b0639f-2cc6-44b8-b97b-15d69dbb511e', 45, 750, 'Karin Svensson', 'karin.svensson@example.com', 'Teststreet 19A, CityD 12345', 'SE', 'Rose Doe', 'rose.doe@example.com', 'Teststreet 19B, CityF 12345', 'FR')
+	ON CONFLICT DO NOTHING;

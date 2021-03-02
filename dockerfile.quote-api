@@ -1,0 +1,35 @@
+# Build the Go binary.
+FROM golang:1.16 as quote-api_builder
+ENV CGO_ENABLED 0
+
+# Create a location in the container for the source code. Using the
+# default GOPATH location.
+RUN mkdir -p /service
+
+# Copy the module files first and then download the dependencies. If this
+# doesn't change, we won't need to do this again in future builds.
+COPY go.* /service/
+WORKDIR /service
+RUN go mod download
+
+# Copy the source code into the container.
+WORKDIR /service
+COPY . .
+
+# Build the admin tool so we can have it in the container. This should not change
+# often so do this first.
+WORKDIR /service/cmd/quote-admin
+RUN go build
+
+# Build the service binary. We are doing this last since this will be different
+# every time we run through this process.
+WORKDIR /service/cmd/quote-api
+RUN go build
+
+# Run the Go Binary in Alpine.
+FROM alpine:3.13
+
+COPY --from=quote-api_builder /service/cmd/quote-admin/quote-admin /service/admin
+COPY --from=quote-api_builder /service/cmd/quote-api/quote-api /service/quote-api
+WORKDIR /service
+CMD ["./quote-api"]
