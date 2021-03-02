@@ -10,11 +10,11 @@ import (
 // Quote manages the set of API's for quote access.
 type Quote interface {
 	// Query retrieves a list of existing quotes.
-	Query(ctx context.Context) ([]quote.Info, error)
+	Query(context.Context) ([]quote.Info, error)
 	// QueryByID retrieves the quote with with id.
-	QueryByID(ctx context.Context, id string) (quote.Info, error)
+	QueryByID(context.Context, quote.ID) (quote.Info, error)
 	// Create adds a quote to the system.
-	Create(ctx context.Context, nq quote.NewQuote) (quote.Info, error)
+	Create(context.Context, quote.NewQuote) (quote.Info, error)
 }
 
 func (h *Handler) handleGetQuote() http.HandlerFunc {

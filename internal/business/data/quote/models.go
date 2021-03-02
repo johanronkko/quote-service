@@ -1,8 +1,11 @@
 package quote
 
+// ID represents a quote ID.
+type ID string
+
 // Info represents an individual quote.
 type Info struct {
-	ID     string   `json:"id"`
+	ID     `json:"id"`
 	To     Customer `json:"to"`
 	From   Customer `json:"from"`
 	Weight int      `json:"weight"`
