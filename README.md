@@ -4,7 +4,7 @@ Provides external customers with an API to send shipment information to Sendify,
 
 ## Project Structure
 
-A lot of the boilerplate code and the project structure is inspired by [ardanlabs](https://github.com/ardanlabs/service/).
+A lot of the boilerplate code and the project structure is inspired by [ardanlabs](https://github.com/ardanlabs/service/). Another big inspiration for how I write my code is [Mat Ryer](https://github.com/matryer).
 
 ## Licensing
 
