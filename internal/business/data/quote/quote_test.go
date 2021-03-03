@@ -47,23 +47,27 @@ func TestQuote(t *testing.T) {
 		Weight: 500,
 	}
 
+	// Query empty database.
 	quotes, err := q.Query(ctx)
 	is.NoErr(err)
 	is.Equal(len(quotes), 0)
 
-	quote, err := q.Create(ctx, nq)
-	is.NoErr(err)
-
-	saved, err := q.QueryByID(ctx, quote.ID)
-	is.NoErr(err)
-
-	diff := cmp.Diff(quote, saved)
-	is.True(diff != "")
-
+	// Query database with 3 quotes.
 	err = schema.Seed(db)
 	is.NoErr(err)
-
 	quotes, err = q.Query(ctx)
 	is.NoErr(err)
-	is.Equal(len(quotes), 1+3) // 1 newly added quote and 3 seeded.
+	is.Equal(len(quotes), 3)
+
+	// Create quote.
+	quote, err := q.Create(ctx, nq)
+	is.NoErr(err)
+	is.True(cmp.Diff(quote.To, nq.To) == "")
+	is.True(cmp.Diff(quote.From, nq.From) == "")
+	is.True(cmp.Diff(quote.Weight, nq.Weight) == "")
+
+	// Query by ID returns correct quote.
+	saved, err := q.QueryByID(ctx, quote.ID)
+	is.NoErr(err)
+	is.True(cmp.Diff(quote, saved) == "")
 }

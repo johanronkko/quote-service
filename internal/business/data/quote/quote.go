@@ -129,16 +129,16 @@ func (qq queryQuote) toInfo() Info {
 		Weight:       qq.Weight,
 		ShipmentCost: qq.ShipmentCost,
 		To: Customer{
-			Name:        qq.FromName,
-			Email:       qq.FromEmail,
-			Address:     qq.FromAddress,
-			CountryCode: qq.FromCountryCode,
-		},
-		From: Customer{
 			Name:        qq.ToName,
 			Email:       qq.ToEmail,
 			Address:     qq.ToAddress,
 			CountryCode: qq.ToCountryCode,
+		},
+		From: Customer{
+			Name:        qq.FromName,
+			Email:       qq.FromEmail,
+			Address:     qq.FromAddress,
+			CountryCode: qq.FromCountryCode,
 		},
 	}
 }
