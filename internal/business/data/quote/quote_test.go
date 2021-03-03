@@ -11,6 +11,8 @@ import (
 	"github.com/matryer/is"
 )
 
+// TODO: test validation of ID and NewQuote + ShipmentCost error case.
+
 type TestShipmentCostCalculator struct {
 	price float64
 	err   error
