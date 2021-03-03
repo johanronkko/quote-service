@@ -1,17 +1,15 @@
 package quote
 
-import "github.com/google/uuid"
-
 // ID represents a quote ID.
 type ID string
 
 // Info represents an individual quote.
 type Info struct {
-	ID     `json:"id"`
-	To     Customer `json:"to"`
-	From   Customer `json:"from"`
-	Weight int      `json:"weight"`
-	Price  float64  `json:"price"`
+	ID           `json:"id"`
+	To           Customer `json:"to"`
+	From         Customer `json:"from"`
+	Weight       int      `json:"weight"`
+	ShipmentCost float64  `json:"shipment_cost"`
 }
 
 // NewQuote contains information needed to create a new Quote.
@@ -21,7 +19,7 @@ type NewQuote struct {
 	Weight int      `json:"weight"`
 }
 
-// Customer represents a customer associated with a quote.
+// Customer contains information about a customer associated with a quote.
 type Customer struct {
 	Name        string `json:"name"`
 	Email       string `json:"email"`
@@ -29,13 +27,8 @@ type Customer struct {
 	CountryCode string `json:"country_code"`
 }
 
-func (id ID) validate() error {
-	if _, err := uuid.Parse(string(id)); err != nil {
-		return ErrInvalidID
-	}
-	return nil
-}
-
-func generateID() ID {
-	return ID(uuid.New().String())
+// ShipmentCostCalculator is capable of calculating shipment costs from
+// a package's weight and sender's country code.
+type ShipmentCostCalculator interface {
+	ShipmentCost(weight int, ccode string) (float64, error)
 }
