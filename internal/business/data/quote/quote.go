@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/johanronkko/quote-service/internal/business/region"
 )
 
 var (
@@ -19,16 +20,12 @@ var (
 
 // Quote manages the set of API's for quote access.
 type Quote struct {
-	db   *sqlx.DB
-	calc ShipmentCostCalculator
+	db *sqlx.DB
 }
 
 // New constructs a Quote for api access.
-func New(db *sqlx.DB, calc ShipmentCostCalculator) Quote {
-	return Quote{
-		db,
-		calc,
-	}
+func New(db *sqlx.DB) Quote {
+	return Quote{db}
 }
 
 // Create adds a quote to the database.
@@ -36,7 +33,7 @@ func (q Quote) Create(ctx context.Context, nq NewQuote) (Info, error) {
 
 	// TODO: validate new quote
 
-	cost, err := q.calc.ShipmentCost(nq.Weight, nq.From.CountryCode)
+	cost, err := shipmentCost(nq.Weight, nq.From.CountryCode)
 	if err != nil {
 		return Info{}, fmt.Errorf("calculating shipment cost: %w", err)
 	}
@@ -152,4 +149,34 @@ func (id ID) validate() error {
 
 func generateID() ID {
 	return ID(uuid.New().String())
+}
+
+// shipmentCost calculates shipment cost as the multiplication of a package's
+// weight class factor and a region factor determined by the country code.
+// Errors if country code not supported or if package not within a valid weight
+// class.
+//
+// We have four classes of weight: small (0 - 10kg), 100sek; medium (10 - 25kg),
+// 300sek; large (25 - 50kg), 500sek; huge (50 - 1000kg), 2000sek. If country
+// code is Nordic, weight class is multiplied with 1, within EU with 1.5 and
+// outside EU with 2.5.
+func shipmentCost(weight int, ccode string) (float64, error) {
+	if weight < 0 || weight > 1000 {
+		return 0, errors.New("invalid weight")
+	}
+	r, err := region.From(ccode)
+	if err != nil {
+		return 0, fmt.Errorf("region translatation: %w", err)
+	}
+	regionFactor := float64(r)
+	if weight <= 10 {
+		return 100 * regionFactor, nil
+	}
+	if weight <= 25 {
+		return 300 * regionFactor, nil
+	}
+	if weight <= 50 {
+		return 500 * regionFactor, nil
+	}
+	return 2000 * regionFactor, nil
 }

@@ -26,9 +26,3 @@ type Customer struct {
 	Address     string `json:"address"`
 	CountryCode string `json:"country_code"`
 }
-
-// ShipmentCostCalculator is capable of calculating shipment costs from
-// a package's weight and sender's country code.
-type ShipmentCostCalculator interface {
-	ShipmentCost(weight int, ccode string) (float64, error)
-}

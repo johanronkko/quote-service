@@ -1,46 +1,33 @@
-package quote_test
+package quote
 
 import (
 	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/johanronkko/quote-service/internal/business/data/quote"
 	"github.com/johanronkko/quote-service/internal/business/data/schema"
 	"github.com/johanronkko/quote-service/internal/business/tests"
 	"github.com/matryer/is"
 )
 
-// TODO: test validation of ID and NewQuote + ShipmentCost error case.
-
-type TestShipmentCostCalculator struct {
-	price float64
-	err   error
-}
-
-func (c TestShipmentCostCalculator) ShipmentCost(weight int, ccode string) (float64, error) {
-	return c.price, c.err
-}
+// TODO: test validation of ID and NewQuote + shipment cost.
 
 func TestQuote(t *testing.T) {
 	is := is.New(t)
 
 	db := tests.NewUnit(t)
-	calc := &TestShipmentCostCalculator{
-		price: 1250,
-	}
-	q := quote.New(db, calc)
+	q := New(db)
 
 	ctx := context.Background()
 
-	nq := quote.NewQuote{
-		To: quote.Customer{
+	nq := NewQuote{
+		To: Customer{
 			Name:        "Sven Svensson",
 			Email:       "sven.svensson@test.com",
 			Address:     "Testgatan 42B, Göteborg 12345",
 			CountryCode: "sv",
 		},
-		From: quote.Customer{
+		From: Customer{
 			Name:        "John Doe",
 			Email:       "john.doe@test.com",
 			Address:     "Teststreet 4242, Blaine 55434",
@@ -64,12 +51,81 @@ func TestQuote(t *testing.T) {
 	// Create quote.
 	quote, err := q.Create(ctx, nq)
 	is.NoErr(err)
-	is.True(cmp.Diff(quote.To, nq.To) == "")
-	is.True(cmp.Diff(quote.From, nq.From) == "")
-	is.True(cmp.Diff(quote.Weight, nq.Weight) == "")
 
 	// Query by ID returns correct quote.
 	saved, err := q.QueryByID(ctx, quote.ID)
 	is.NoErr(err)
 	is.True(cmp.Diff(quote, saved) == "")
+}
+
+func TestCalcShipmentCost(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		cases := []struct {
+			Name string
+
+			CountryCode string
+			Weight      int
+
+			Want float64
+		}{
+			{"small nordic", "no", 0, 100},
+			{"medium nordic", "sv", 11, 300},
+			{"large nordic", "dk", 26, 500},
+			{"huge nordic", "fi", 51, 2000},
+
+			{"small within EU", "fr", 10, 150},
+			{"medium within EU", "de", 25, 450},
+			{"large within EU", "lt", 50, 750},
+			{"huge within EU", "cz", 1000, 3000},
+
+			{"small outide EU", "us", 7, 250},
+			{"medium outide EU", "ca", 18, 750},
+			{"large outide EU", "br", 29, 1250},
+			{"huge outide EU", "jp", 777, 5000},
+		}
+		for _, tc := range cases {
+			t.Run(tc.Name, func(t *testing.T) {
+				is := is.New(t)
+				got, err := shipmentCost(tc.Weight, tc.CountryCode)
+				is.NoErr(err)
+				is.Equal(got, tc.Want)
+			})
+		}
+	})
+
+	t.Run("invalid country code", func(t *testing.T) {
+		cases := []struct {
+			Name string
+
+			CountryCode string
+		}{
+			{"not supported", "nn"},
+			{"bad format", "banana"},
+		}
+		for _, tc := range cases {
+			t.Run(tc.Name, func(t *testing.T) {
+				is := is.New(t)
+				_, err := shipmentCost(42, tc.CountryCode)
+				is.True(err != nil)
+			})
+		}
+	})
+
+	t.Run("invalid weight", func(t *testing.T) {
+		cases := []struct {
+			Name string
+
+			Weight int
+		}{
+			{"below 0", -1},
+			{"above 1000", 1001},
+		}
+		for _, tc := range cases {
+			t.Run(tc.Name, func(t *testing.T) {
+				is := is.New(t)
+				_, err := shipmentCost(tc.Weight, "sv")
+				is.True(err != nil)
+			})
+		}
+	})
 }
