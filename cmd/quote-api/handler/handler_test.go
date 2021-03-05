@@ -66,7 +66,7 @@ type QuotesResponse struct {
 }
 
 func TestHandleListQuotes(t *testing.T) {
-	t.Run("ok", func(t *testing.T) {
+	t.Run("returns quotes", func(t *testing.T) {
 
 		cases := []struct {
 			Name string
@@ -108,7 +108,7 @@ func TestHandleListQuotes(t *testing.T) {
 		}
 	})
 
-	t.Run("unknown error", func(t *testing.T) {
+	t.Run("service error", func(t *testing.T) {
 		is := is.New(t)
 
 		// Mock services.
@@ -134,7 +134,38 @@ func TestHandleListQuotes(t *testing.T) {
 		is.True(!resp.Success)
 		is.True(resp.Error != nil)
 	})
+}
 
+func TestHandleGetQuote(t *testing.T) {
+	t.Run("returns quote", func(t *testing.T) {
+		is := is.New(t)
+
+		id := validate.GenerateID()
+
+		// Mock.
+		q := &mock.Quote{}
+		q.QueryByIDCall.Returns.Info = createTestQuote(id)
+
+		// Setup handler.
+		h := New()
+		h.Quote = q
+
+		// Make request.
+		r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes/"+id, nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+
+		// Assert response HTTP headers.
+		is.Equal(w.Code, http.StatusOK)
+
+		// Assert response payload.
+		var resp QuoteResponse
+		decodePayload(is, w.Body, &resp)
+		is.Equal(resp.Code, http.StatusOK)
+		is.True(resp.Success)
+		is.Equal(resp.Error, nil)
+		is.Equal(resp.Data.Quote, q.QueryByIDCall.Returns.Info)
+	})
 }
 
 func createTestQuotes(numQuotes int) []quote.Info {

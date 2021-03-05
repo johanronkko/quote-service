@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/johanronkko/quote-service/internal/business/data/quote"
+	"github.com/matryer/way"
 )
 
 // Quote manages the set of API's for quote access.
@@ -19,8 +20,13 @@ type Quote interface {
 }
 
 func (h *Handler) handleGetQuote() http.HandlerFunc {
+	type response struct {
+		Quote quote.Info `json:"quote"`
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		respond(w, r, http.StatusNotImplemented, http.StatusText(http.StatusNotImplemented))
+		id := way.Param(r.Context(), "id")
+		quote, _ := h.Quote.QueryByID(r.Context(), id)
+		respond(w, r, http.StatusOK, &response{quote})
 	}
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/johanronkko/quote-service/internal/business/data/schema"
 	"github.com/johanronkko/quote-service/internal/business/tests"
 	"github.com/matryer/is"
@@ -45,7 +44,7 @@ func TestQuote(t *testing.T) {
 	// Query by ID returns correct quote.
 	saved, err := q.QueryByID(ctx, quote.ID)
 	is.NoErr(err)
-	is.True(cmp.Diff(quote, saved) == "")
+	is.Equal(quote, saved)
 
 	// Query database with 1 newly added quote and 3 seeded quotes.
 	err = schema.Seed(db)
