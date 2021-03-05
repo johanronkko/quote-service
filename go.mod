@@ -15,4 +15,5 @@ require (
 	github.com/matryer/is v1.4.0
 	github.com/matryer/way v0.0.0-20180416093233-9632d0c407b0
 	github.com/ory/dockertest/v3 v3.6.3
+	golang.org/x/net v0.0.0-20191003171128-d98b1b443823
 )
