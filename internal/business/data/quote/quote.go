@@ -78,7 +78,7 @@ func (q Quote) Query(ctx context.Context) ([]Info, error) {
 }
 
 // QueryByID gets the specified quote from the database.
-func (q Quote) QueryByID(ctx context.Context, quoteID ID) (Info, error) {
+func (q Quote) QueryByID(ctx context.Context, quoteID string) (Info, error) {
 
 	const query = `
 	SELECT
@@ -100,7 +100,7 @@ func (q Quote) QueryByID(ctx context.Context, quoteID ID) (Info, error) {
 }
 
 type queryQuote struct {
-	ID              ID      `db:"quote_id"`
+	ID              string  `db:"quote_id"`
 	Weight          int     `db:"package_weight"`
 	ShipmentCost    float64 `db:"shipment_cost"`
 	ToName          string  `db:"to_name"`
@@ -133,8 +133,8 @@ func (qq queryQuote) toInfo() Info {
 	}
 }
 
-func generateID() ID {
-	return ID(uuid.New().String())
+func generateID() string {
+	return uuid.New().String()
 }
 
 // calcShipmentCost calculates shipment cost as the multiplication of a package's
