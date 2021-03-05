@@ -12,8 +12,6 @@ import (
 )
 
 var (
-	// ErrInvalidID occurs when an ID is not in a valid form.
-	ErrInvalidID = errors.New("ID is not in its proper form")
 	// ErrNotFound is used when a specific Quote is requested but does not exist.
 	ErrNotFound = errors.New("not found")
 )
@@ -31,9 +29,7 @@ func New(db *sqlx.DB) Quote {
 // Create adds a quote to the database.
 func (q Quote) Create(ctx context.Context, nq NewQuote) (Info, error) {
 
-	// TODO: validate new quote
-
-	cost, err := shipmentCost(nq.Weight, nq.From.CountryCode)
+	cost, err := calcShipmentCost(nq.Weight, nq.From.CountryCode)
 	if err != nil {
 		return Info{}, fmt.Errorf("calculating shipment cost: %w", err)
 	}
@@ -83,9 +79,6 @@ func (q Quote) Query(ctx context.Context) ([]Info, error) {
 
 // QueryByID gets the specified quote from the database.
 func (q Quote) QueryByID(ctx context.Context, quoteID ID) (Info, error) {
-	if err := quoteID.validate(); err != nil {
-		return Info{}, ErrInvalidID
-	}
 
 	const query = `
 	SELECT
@@ -140,18 +133,11 @@ func (qq queryQuote) toInfo() Info {
 	}
 }
 
-func (id ID) validate() error {
-	if _, err := uuid.Parse(string(id)); err != nil {
-		return ErrInvalidID
-	}
-	return nil
-}
-
 func generateID() ID {
 	return ID(uuid.New().String())
 }
 
-// shipmentCost calculates shipment cost as the multiplication of a package's
+// calcShipmentCost calculates shipment cost as the multiplication of a package's
 // weight class factor and a region factor determined by the country code.
 // Errors if country code not supported or if package not within a valid weight
 // class.
@@ -160,7 +146,7 @@ func generateID() ID {
 // 300sek; large (25 - 50kg), 500sek; huge (50 - 1000kg), 2000sek. If country
 // code is Nordic, weight class is multiplied with 1, within EU with 1.5 and
 // outside EU with 2.5.
-func shipmentCost(weight int, ccode string) (float64, error) {
+func calcShipmentCost(weight int, ccode string) (float64, error) {
 	if weight < 0 || weight > 1000 {
 		return 0, errors.New("invalid weight")
 	}

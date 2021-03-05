@@ -10,8 +10,6 @@ import (
 	"github.com/matryer/is"
 )
 
-// TODO: test validation of ID and NewQuote + shipment cost.
-
 func TestQuote(t *testing.T) {
 	is := is.New(t)
 
@@ -20,35 +18,27 @@ func TestQuote(t *testing.T) {
 
 	ctx := context.Background()
 
-	nq := NewQuote{
-		To: Customer{
-			Name:        "Sven Svensson",
-			Email:       "sven.svensson@test.com",
-			Address:     "Testgatan 42B, Göteborg 12345",
-			CountryCode: "sv",
-		},
-		From: Customer{
-			Name:        "John Doe",
-			Email:       "john.doe@test.com",
-			Address:     "Teststreet 4242, Blaine 55434",
-			CountryCode: "us",
-		},
-		Weight: 500,
-	}
-
 	// Query empty database.
 	quotes, err := q.Query(ctx)
 	is.NoErr(err)
 	is.Equal(len(quotes), 0)
 
-	// Query database with 3 quotes.
-	err = schema.Seed(db)
-	is.NoErr(err)
-	quotes, err = q.Query(ctx)
-	is.NoErr(err)
-	is.Equal(len(quotes), 3)
-
 	// Create quote.
+	nq := NewQuote{
+		To: Customer{
+			Name:        "Sven Svensson",
+			Email:       "sven.svensson@test.com",
+			Address:     "Testgatan 42B, Göteborg 12345",
+			CountryCode: "SV",
+		},
+		From: Customer{
+			Name:        "John Doe",
+			Email:       "john.doe@test.com",
+			Address:     "Teststreet 4242, Blaine 55434",
+			CountryCode: "US",
+		},
+		Weight: 500,
+	}
 	quote, err := q.Create(ctx, nq)
 	is.NoErr(err)
 
@@ -56,6 +46,13 @@ func TestQuote(t *testing.T) {
 	saved, err := q.QueryByID(ctx, quote.ID)
 	is.NoErr(err)
 	is.True(cmp.Diff(quote, saved) == "")
+
+	// Query database with 1 newly added quote and 3 seeded quotes.
+	err = schema.Seed(db)
+	is.NoErr(err)
+	quotes, err = q.Query(ctx)
+	is.NoErr(err)
+	is.Equal(len(quotes), 1+3)
 }
 
 func TestCalcShipmentCost(t *testing.T) {
@@ -86,7 +83,7 @@ func TestCalcShipmentCost(t *testing.T) {
 		for _, tc := range cases {
 			t.Run(tc.Name, func(t *testing.T) {
 				is := is.New(t)
-				got, err := shipmentCost(tc.Weight, tc.CountryCode)
+				got, err := calcShipmentCost(tc.Weight, tc.CountryCode)
 				is.NoErr(err)
 				is.Equal(got, tc.Want)
 			})
@@ -105,7 +102,7 @@ func TestCalcShipmentCost(t *testing.T) {
 		for _, tc := range cases {
 			t.Run(tc.Name, func(t *testing.T) {
 				is := is.New(t)
-				_, err := shipmentCost(42, tc.CountryCode)
+				_, err := calcShipmentCost(42, tc.CountryCode)
 				is.True(err != nil)
 			})
 		}
@@ -123,7 +120,7 @@ func TestCalcShipmentCost(t *testing.T) {
 		for _, tc := range cases {
 			t.Run(tc.Name, func(t *testing.T) {
 				is := is.New(t)
-				_, err := shipmentCost(tc.Weight, "sv")
+				_, err := calcShipmentCost(tc.Weight, "sv")
 				is.True(err != nil)
 			})
 		}

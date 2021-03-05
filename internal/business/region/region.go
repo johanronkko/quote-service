@@ -6,13 +6,13 @@ import (
 )
 
 var (
-	// ErrInvalidCountryCode occurs when a provided country code either in bad
-	// form or not supported. Country codes are expected to follow the ISO-3166-1
-	// alpha-2 standard.
-	ErrInvalidCountryCode = errors.New("invalid country code")
+	// ErrUnsupprtedCountryCode occurs when a provided country code not supported.
+	// Country codes are expected to follow the ISO-3166-1 alpha-2 standard.
+	ErrUnsupprtedCountryCode = errors.New("invalid country code")
 )
 
-// Region represents a region in the world.
+// Region represents a region in the world. Value of region corresponds to its
+// factor value when calculating shipment cost.
 type Region float64
 
 // Regions.
@@ -26,7 +26,7 @@ const (
 func From(ccode string) (Region, error) {
 	r, ok := regions[strings.ToLower(ccode)]
 	if !ok {
-		return 0, ErrInvalidCountryCode
+		return 0, ErrUnsupprtedCountryCode
 	}
 	return r, nil
 }
