@@ -8,7 +8,7 @@ import (
 var (
 	// ErrUnsupprtedCountryCode occurs when a provided country code not supported.
 	// Country codes are expected to follow the ISO-3166-1 alpha-2 standard.
-	ErrUnsupprtedCountryCode = errors.New("invalid country code")
+	ErrUnsupprtedCountryCode = errors.New("country code not supported")
 )
 
 // Region represents a region in the world. Value of region corresponds to its

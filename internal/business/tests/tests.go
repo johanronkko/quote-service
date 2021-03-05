@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"runtime"
 	"testing"
@@ -82,4 +83,15 @@ func NewUnit(tb testing.TB) *sqlx.DB {
 	}
 
 	return db
+}
+
+// GenRandomAlpha generates a string with n random alpha characters.
+func GenRandomAlpha(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	s := make([]rune, n)
+	for i := range s {
+		s[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(s)
 }
