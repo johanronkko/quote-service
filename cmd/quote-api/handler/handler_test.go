@@ -1,6 +1,7 @@
 package handler_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -67,7 +68,7 @@ type QuotesResponse struct {
 }
 
 func TestHandleListQuotes(t *testing.T) {
-	t.Run("returns quotes", func(t *testing.T) {
+	t.Run("ok", func(t *testing.T) {
 
 		cases := []struct {
 			Name string
@@ -91,7 +92,7 @@ func TestHandleListQuotes(t *testing.T) {
 				h.Quote = q
 
 				// Make request.
-				r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes", nil)
+				r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes/", nil)
 				w := httptest.NewRecorder()
 				h.ServeHTTP(w, r)
 
@@ -121,7 +122,7 @@ func TestHandleListQuotes(t *testing.T) {
 		h.Quote = q
 
 		// Make request.
-		r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes", nil)
+		r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes/", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, r)
 
@@ -166,7 +167,7 @@ func TestHandleListQuotes(t *testing.T) {
 }
 
 func TestHandleGetQuote(t *testing.T) {
-	t.Run("good id", func(t *testing.T) {
+	t.Run("ok", func(t *testing.T) {
 		is := is.New(t)
 
 		quoteID := validate.GenerateID()
@@ -240,6 +241,47 @@ func TestHandleGetQuote(t *testing.T) {
 	})
 }
 
+func TestHandleAddQuote(t *testing.T) {
+	t.Run("ok", func(t *testing.T) {
+		is := is.New(t)
+
+		nq := createTestNewQuote()
+		nq.From.CountryCode = "US"
+		nq.Weight = 500
+
+		// Mock services.
+		q := &mock.Quote{}
+		q.CreateCall.Returns.Info = quote.Info{
+			ID:           validate.GenerateID(),
+			To:           nq.To,
+			From:         nq.From,
+			Weight:       nq.Weight,
+			ShipmentCost: 2.5 * 2000, // Outside EU * huge package
+		}
+
+		// Setup handler.
+		h := New()
+		h.Quote = q
+
+		// Make request.
+		reqBody, err := json.Marshal(&nq)
+		is.NoErr(err)
+		r := httptest.NewRequest(http.MethodPost, "/api.v1/quotes/", bytes.NewBuffer(reqBody))
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+
+		// Assert response HTTP headers.
+		is.Equal(w.Code, http.StatusCreated)
+
+		// Assert response payload.
+		var resp QuoteResponse
+		decodePayload(is, w.Body, &resp)
+		is.Equal(resp.Code, http.StatusCreated)
+		is.Equal(resp.Error, nil)
+		is.Equal(resp.Data.Quote, q.CreateCall.Returns.Info)
+	})
+}
+
 func createTestQuotes(numQuotes int) []quote.Info {
 	qs := []quote.Info{}
 	for i := 0; i < numQuotes; i++ {
@@ -255,6 +297,24 @@ func createTestQuote(id string) quote.Info {
 		To:           createTestCustomer("Sven Svensson", "SE"),
 		Weight:       500,
 		ShipmentCost: 1250,
+	}
+}
+
+func createTestNewQuote() quote.NewQuote {
+	return quote.NewQuote{
+		To: quote.Customer{
+			Name:        "Sven Svensson",
+			Email:       "sven.svensson@test.com",
+			Address:     "Testgatan 42B, Göteborg 12345",
+			CountryCode: "SV",
+		},
+		From: quote.Customer{
+			Name:        "John Doe",
+			Email:       "john.doe@test.com",
+			Address:     "Teststreet 4242, Blaine 55434",
+			CountryCode: "US",
+		},
+		Weight: 500,
 	}
 }
 

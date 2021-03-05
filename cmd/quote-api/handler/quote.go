@@ -48,18 +48,24 @@ func (h *Handler) handleListQuotes() http.HandlerFunc {
 		Quotes []quote.Info `json:"quotes"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		quotes, err := h.Quote.Query(r.Context())
+		qs, err := h.Quote.Query(r.Context())
 		if err != nil {
 			respond(w, r, http.StatusInternalServerError, fmt.Errorf("internal server error"))
 			return
 		}
-		respond(w, r, http.StatusOK, &response{quotes})
+		respond(w, r, http.StatusOK, &response{qs})
 	}
 
 }
 
 func (h *Handler) handleAddQuote() http.HandlerFunc {
+	type response struct {
+		Quote quote.Info `json:"quote"`
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		respond(w, r, http.StatusNotImplemented, http.StatusText(http.StatusNotImplemented))
+		var nq quote.NewQuote
+		decode(w, r, &nq)
+		q, _ := h.Quote.Create(r.Context(), nq)
+		respond(w, r, http.StatusCreated, &response{q})
 	}
 }
