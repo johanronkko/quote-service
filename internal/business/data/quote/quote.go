@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/johanronkko/quote-service/internal/business/region"
+	"github.com/johanronkko/quote-service/internal/business/validate"
 )
 
 var (
@@ -35,7 +35,7 @@ func (q Quote) Create(ctx context.Context, nq NewQuote) (Info, error) {
 	}
 
 	info := Info{
-		ID:           generateID(),
+		ID:           validate.GenerateID(),
 		To:           nq.To,
 		From:         nq.From,
 		Weight:       nq.Weight,
@@ -131,10 +131,6 @@ func (qq queryQuote) toInfo() Info {
 			CountryCode: qq.FromCountryCode,
 		},
 	}
-}
-
-func generateID() string {
-	return uuid.New().String()
 }
 
 // calcShipmentCost calculates shipment cost as the multiplication of a package's

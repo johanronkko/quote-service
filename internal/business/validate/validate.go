@@ -58,6 +58,11 @@ func init() {
 // ErrInvalidID occurs when an ID is not in a valid form.
 var ErrInvalidID = errors.New("ID is not in its proper form")
 
+// GenerateID generate a unique id for entities.
+func GenerateID() string {
+	return uuid.New().String()
+}
+
 // CheckID validates that the format of an id is valid.
 func CheckID(id string) error {
 	if _, err := uuid.Parse(id); err != nil {
