@@ -13,6 +13,7 @@ import (
 
 	"github.com/ardanlabs/conf"
 	"github.com/johanronkko/quote-service/cmd/quote-api/handler"
+	"github.com/johanronkko/quote-service/internal/business/data/quote"
 	"github.com/johanronkko/quote-service/internal/foundation/database"
 )
 
@@ -98,6 +99,7 @@ func run(log *log.Logger) error {
 	log.Println("main: Initializing API support")
 
 	handler := handler.New()
+	handler.Quote = quote.New(db)
 
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
