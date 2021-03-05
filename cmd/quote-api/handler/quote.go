@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/johanronkko/quote-service/internal/business/data/quote"
+	"github.com/johanronkko/quote-service/internal/business/region"
 	"github.com/johanronkko/quote-service/internal/business/validate"
 	"github.com/matryer/way"
 )
@@ -65,7 +66,14 @@ func (h *Handler) handleAddQuote() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var nq quote.NewQuote
 		decode(w, r, &nq)
-		q, _ := h.Quote.Create(r.Context(), nq)
+		q, err := h.Quote.Create(r.Context(), nq)
+		if err == region.ErrUnsupportedCountryCode {
+			respond(w, r, http.StatusBadRequest, err)
+			return
+		} else if err != nil {
+			respond(w, r, http.StatusInternalServerError, fmt.Errorf("internal server error"))
+			return
+		}
 		respond(w, r, http.StatusCreated, &response{q})
 	}
 }

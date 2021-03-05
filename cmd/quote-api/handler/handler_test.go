@@ -14,6 +14,7 @@ import (
 	. "github.com/johanronkko/quote-service/cmd/quote-api/handler"
 	"github.com/johanronkko/quote-service/internal/business/data/quote"
 	"github.com/johanronkko/quote-service/internal/business/mock"
+	"github.com/johanronkko/quote-service/internal/business/region"
 	"github.com/johanronkko/quote-service/internal/business/validate"
 	"github.com/matryer/is"
 )
@@ -280,6 +281,55 @@ func TestHandleAddQuote(t *testing.T) {
 		is.Equal(resp.Error, nil)
 		is.Equal(resp.Data.Quote, q.CreateCall.Returns.Info)
 	})
+
+	t.Run("service error", func(t *testing.T) {
+		cases := []struct {
+			Name string
+
+			ServiceErr error
+			ErrMsg     string
+
+			StatusCode int
+		}{
+			{"unknown error", errors.New("some error"), "internal server error", http.StatusInternalServerError},
+			{"unsupported country code", region.ErrUnsupportedCountryCode, region.ErrUnsupportedCountryCode.Error(), http.StatusBadRequest},
+		}
+		for _, tc := range cases {
+			t.Run(tc.Name, func(t *testing.T) {
+				is := is.New(t)
+
+				// Mock services.
+				q := &mock.Quote{}
+				q.CreateCall.Returns.Err = tc.ServiceErr
+
+				// Setup handler.
+				h := New()
+				h.Quote = q
+
+				// Make request.
+				nq := createTestNewQuote()
+				reqBody, err := json.Marshal(&nq)
+				is.NoErr(err)
+				r := httptest.NewRequest(http.MethodPost, "/api.v1/quotes/", bytes.NewBuffer(reqBody))
+				w := httptest.NewRecorder()
+				h.ServeHTTP(w, r)
+
+				// Assert response HTTP headers.
+				is.Equal(w.Code, tc.StatusCode)
+
+				// Assert response payload.
+				var resp NoDataResponse
+				decodePayload(is, w.Body, &resp)
+				is.Equal(resp.Code, tc.StatusCode)
+				is.True(!resp.Success)
+				is.Equal(*resp.Error, tc.ErrMsg)
+			})
+		}
+	})
+
+	// TODO: bad request body (decode error)
+
+	// TODO: field validation
 }
 
 func createTestQuotes(numQuotes int) []quote.Info {

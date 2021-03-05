@@ -46,7 +46,7 @@ func TestFrom(t *testing.T) {
 				is := is.New(t)
 
 				_, err := From(tc.CountryCode)
-				is.Equal(err.Error(), ErrInvalidCountryCode.Error())
+				is.Equal(err.Error(), ErrUnsupportedCountryCode.Error())
 			})
 		}
 	})
