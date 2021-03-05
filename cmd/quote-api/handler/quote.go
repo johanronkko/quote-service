@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/johanronkko/quote-service/internal/business/data/quote"
@@ -24,9 +25,18 @@ func (h *Handler) handleGetQuote() http.HandlerFunc {
 }
 
 func (h *Handler) handleListQuotes() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		respond(w, r, http.StatusNotImplemented, http.StatusText(http.StatusNotImplemented))
+	type response struct {
+		Quotes []quote.Info `json:"quotes"`
 	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		quotes, err := h.Quote.Query(r.Context())
+		if err != nil {
+			respond(w, r, http.StatusInternalServerError, fmt.Errorf(http.StatusText(http.StatusInternalServerError)))
+			return
+		}
+		respond(w, r, http.StatusOK, &response{quotes})
+	}
+
 }
 
 func (h *Handler) handleAddQuote() http.HandlerFunc {
