@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -132,26 +133,26 @@ func TestHandleListQuotes(t *testing.T) {
 		decodePayload(is, w.Body, &resp)
 		is.Equal(resp.Code, http.StatusInternalServerError)
 		is.True(!resp.Success)
-		is.True(resp.Error != nil)
+		is.Equal(*resp.Error, "internal server error")
 	})
 }
 
 func TestHandleGetQuote(t *testing.T) {
-	t.Run("returns quote", func(t *testing.T) {
+	t.Run("good id", func(t *testing.T) {
 		is := is.New(t)
 
-		id := validate.GenerateID()
+		quoteID := validate.GenerateID()
 
 		// Mock.
 		q := &mock.Quote{}
-		q.QueryByIDCall.Returns.Info = createTestQuote(id)
+		q.QueryByIDCall.Returns.Info = createTestQuote(quoteID)
 
 		// Setup handler.
 		h := New()
 		h.Quote = q
 
 		// Make request.
-		r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes/"+id, nil)
+		r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes/"+quoteID, nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, r)
 
@@ -165,6 +166,49 @@ func TestHandleGetQuote(t *testing.T) {
 		is.True(resp.Success)
 		is.Equal(resp.Error, nil)
 		is.Equal(resp.Data.Quote, q.QueryByIDCall.Returns.Info)
+	})
+
+	t.Run("service error", func(t *testing.T) {
+		cases := []struct {
+			Name string
+
+			QuoteID    string
+			ServiceErr error
+			ErrMsg     string
+
+			StatusCode int
+		}{
+			{"unknown error", validate.GenerateID(), errors.New("some error"), "internal server error", http.StatusInternalServerError},
+			{"quote not found", validate.GenerateID(), quote.ErrNotFound, quote.ErrNotFound.Error(), http.StatusBadRequest},
+		}
+		for _, tc := range cases {
+			t.Run(tc.Name, func(t *testing.T) {
+				is := is.New(t)
+
+				// Mock services.
+				q := &mock.Quote{}
+				q.QueryByIDCall.Returns.Err = tc.ServiceErr
+
+				// Setup handler.
+				h := New()
+				h.Quote = q
+
+				// Make request.
+				r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes/"+tc.QuoteID, nil)
+				w := httptest.NewRecorder()
+				h.ServeHTTP(w, r)
+
+				// Assert response HTTP headers.
+				is.Equal(w.Code, tc.StatusCode)
+
+				// Assert response payload.
+				var resp NoDataResponse
+				decodePayload(is, w.Body, &resp)
+				is.Equal(resp.Code, tc.StatusCode)
+				is.True(!resp.Success)
+				is.Equal(*resp.Error, tc.ErrMsg)
+			})
+		}
 	})
 }
 

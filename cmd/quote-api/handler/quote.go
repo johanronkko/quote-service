@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -25,8 +26,15 @@ func (h *Handler) handleGetQuote() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := way.Param(r.Context(), "id")
-		quote, _ := h.Quote.QueryByID(r.Context(), id)
-		respond(w, r, http.StatusOK, &response{quote})
+		q, err := h.Quote.QueryByID(r.Context(), id)
+		if errors.Is(err, quote.ErrNotFound) {
+			respond(w, r, http.StatusBadRequest, err)
+			return
+		} else if err != nil {
+			respond(w, r, http.StatusInternalServerError, fmt.Errorf("internal server error"))
+			return
+		}
+		respond(w, r, http.StatusOK, &response{q})
 	}
 }
 
@@ -37,7 +45,7 @@ func (h *Handler) handleListQuotes() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		quotes, err := h.Quote.Query(r.Context())
 		if err != nil {
-			respond(w, r, http.StatusInternalServerError, fmt.Errorf(http.StatusText(http.StatusInternalServerError)))
+			respond(w, r, http.StatusInternalServerError, fmt.Errorf("internal server error"))
 			return
 		}
 		respond(w, r, http.StatusOK, &response{quotes})
