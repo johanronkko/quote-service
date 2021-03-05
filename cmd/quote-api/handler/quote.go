@@ -2,11 +2,11 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/johanronkko/quote-service/internal/business/data/quote"
+	"github.com/johanronkko/quote-service/internal/business/validate"
 	"github.com/matryer/way"
 )
 
@@ -14,7 +14,8 @@ import (
 type Quote interface {
 	// Query retrieves a list of existing quotes.
 	Query(ctx context.Context) ([]quote.Info, error)
-	// QueryByID retrieves the quote with with id.
+	// QueryByID retrieves the quote with id. Returns quote.ErrNotFound if
+	// quote not found.
 	QueryByID(ctx context.Context, id string) (quote.Info, error)
 	// Create adds a quote to the system.
 	Create(ctx context.Context, nq quote.NewQuote) (quote.Info, error)
@@ -26,8 +27,12 @@ func (h *Handler) handleGetQuote() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := way.Param(r.Context(), "id")
+		if err := validate.CheckID(id); err != nil {
+			respond(w, r, http.StatusBadRequest, err)
+			return
+		}
 		q, err := h.Quote.QueryByID(r.Context(), id)
-		if errors.Is(err, quote.ErrNotFound) {
+		if err == quote.ErrNotFound {
 			respond(w, r, http.StatusBadRequest, err)
 			return
 		} else if err != nil {

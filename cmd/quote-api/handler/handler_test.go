@@ -135,6 +135,34 @@ func TestHandleListQuotes(t *testing.T) {
 		is.True(!resp.Success)
 		is.Equal(*resp.Error, "internal server error")
 	})
+
+	t.Run("bad id format", func(t *testing.T) {
+		is := is.New(t)
+
+		quoteID := "badFormat"
+
+		// Mock services.
+		q := &mock.Quote{}
+
+		// Setup handler.
+		h := New()
+		h.Quote = q
+
+		// Make request.
+		r := httptest.NewRequest(http.MethodGet, "/api.v1/quotes/"+quoteID, nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+
+		// Assert response HTTP headers.
+		is.Equal(w.Code, http.StatusBadRequest)
+
+		// Assert response payload.
+		var resp NoDataResponse
+		decodePayload(is, w.Body, &resp)
+		is.Equal(resp.Code, http.StatusBadRequest)
+		is.True(!resp.Success)
+		is.Equal(*resp.Error, validate.ErrInvalidID.Error())
+	})
 }
 
 func TestHandleGetQuote(t *testing.T) {
