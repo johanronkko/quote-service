@@ -18,7 +18,7 @@ Optionally, seed the database with `make seed`.
 
 ## Endpoints
 
-Every endpoint will respond with an HTTP status `code` and a `success` indicator. If an error happens, the response body will consist of an `error`field. All data is sent via a `data` field. See below examples for the endpoints.
+Every endpoint will respond with an HTTP status `code` and a `success` indicator. If an error happens, the response body will consist of an `error` field. All data is sent via a `data` field. See below for examples of response bodies for the endpoints. `cmd/quote-api/handler/handler_test.go` also serves as documention.
 
 ### Healthcheck
 
@@ -56,7 +56,17 @@ Do `GET http://localhost:3000/api.v1/quotes/1cf37266-3473-4006-984f-9325122678b7
 
 ### List Quotes  
 
-Do `GET http://localhost:3000/api.v1/quotes/`.
+Do `GET http://localhost:3000/api.v1/quotes/` and expect a response with the following format.
+
+```json
+{
+    "code": 200,
+    "data": {
+        "quotes": [...]
+    },
+    "success": true
+}
+```
 
 ### Add quote:
 
