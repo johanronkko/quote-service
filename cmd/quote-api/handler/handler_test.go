@@ -327,7 +327,31 @@ func TestHandleAddQuote(t *testing.T) {
 		}
 	})
 
-	// TODO: bad request body (decode error)
+	t.Run("bad request body", func(t *testing.T) {
+		is := is.New(t)
+
+		// Mock services.
+		q := &mock.Quote{}
+
+		// Setup handler.
+		h := New()
+		h.Quote = q
+
+		// Make request.
+		r := httptest.NewRequest(http.MethodPost, "/api.v1/quotes/", nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+
+		// Assert response HTTP headers.
+		is.Equal(w.Code, http.StatusBadRequest)
+
+		// Assert response payload.
+		var resp NoDataResponse
+		decodePayload(is, w.Body, &resp)
+		is.Equal(resp.Code, http.StatusBadRequest)
+		is.True(!resp.Success)
+		is.True(resp.Error != nil)
+	})
 
 	// TODO: field validation
 }

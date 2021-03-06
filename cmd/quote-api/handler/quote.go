@@ -65,7 +65,10 @@ func (h *Handler) handleAddQuote() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var nq quote.NewQuote
-		decode(w, r, &nq)
+		if err := decode(w, r, &nq); err != nil {
+			respond(w, r, http.StatusBadRequest, fmt.Errorf("could not decode JSON"))
+			return
+		}
 		q, err := h.Quote.Create(r.Context(), nq)
 		if err == region.ErrUnsupportedCountryCode {
 			respond(w, r, http.StatusBadRequest, err)
