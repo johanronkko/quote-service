@@ -1,3 +1,4 @@
+// Package schema contains the database schema, migrations and seeding data.
 package schema
 
 import (

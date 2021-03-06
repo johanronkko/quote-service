@@ -1,3 +1,4 @@
+// Package region defines the region type and contains functionality related to mapping of region from other data.
 package region
 
 import (

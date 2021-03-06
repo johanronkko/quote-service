@@ -1,3 +1,4 @@
+// Package quote contains quote related create and read functionality.
 package quote
 
 import (

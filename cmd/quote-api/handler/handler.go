@@ -1,3 +1,5 @@
+// Package handler contains the full set of handler functions and routes
+// supported by the web API.
 package handler
 
 import (

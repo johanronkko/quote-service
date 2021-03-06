@@ -145,7 +145,7 @@ A lot of the boilerplate code and the project structure is inspired by [ardanlab
 
 You find the main entrypoint to the application running the HTTP server at `cmd/quote-api/main.go`. You also have `cmd/quote-admin/main.go`, which allows you to perform migratations and seed the database. All the business logic is found under `internal/business/`. Code that is not related to the business logic, but also not meant to be shared, is found under `internal/foundation/`.
 
-## Discussions About Design Decisions
+## Design Decisions (discussion)
 
 I have made quite a few design decision that brings both pros and cons. 
 
