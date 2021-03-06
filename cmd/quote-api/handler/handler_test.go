@@ -15,6 +15,7 @@ import (
 	"github.com/johanronkko/quote-service/internal/business/data/quote"
 	"github.com/johanronkko/quote-service/internal/business/mock"
 	"github.com/johanronkko/quote-service/internal/business/region"
+	"github.com/johanronkko/quote-service/internal/business/tests"
 	"github.com/johanronkko/quote-service/internal/business/validate"
 	"github.com/matryer/is"
 )
@@ -23,6 +24,26 @@ type NoDataResponse struct {
 	Code    int     `json:"code"`
 	Error   *string `json:"error"`
 	Success bool    `json:"success"`
+}
+
+type FieldErrorResponse struct {
+	Code        int                  `json:"code"`
+	FieldErrors validate.FieldErrors `json:"error"`
+	Success     bool                 `json:"success"`
+}
+
+type QuoteResponse struct {
+	NoDataResponse
+	Data struct {
+		Quote quote.Info `json:"quote"`
+	} `json:"data"`
+}
+
+type QuotesResponse struct {
+	NoDataResponse
+	Data struct {
+		Quotes []quote.Info `json:"quotes"`
+	} `json:"data"`
 }
 
 func decodePayload(is *is.I, r io.Reader, v interface{}) {
@@ -52,20 +73,6 @@ func TestHandleHealthCheck(t *testing.T) {
 	is.Equal(resp.Code, http.StatusOK)
 	is.True(resp.Success)
 	is.Equal(resp.Error, nil)
-}
-
-type QuoteResponse struct {
-	NoDataResponse
-	Data struct {
-		Quote quote.Info `json:"quote"`
-	} `json:"data"`
-}
-
-type QuotesResponse struct {
-	NoDataResponse
-	Data struct {
-		Quotes []quote.Info `json:"quotes"`
-	} `json:"data"`
 }
 
 func TestHandleListQuotes(t *testing.T) {
@@ -353,7 +360,50 @@ func TestHandleAddQuote(t *testing.T) {
 		is.True(resp.Error != nil)
 	})
 
-	// TODO: field validation
+	t.Run("invalid request fields", func(t *testing.T) {
+
+		// valdiate all fields at once
+		is := is.New(t)
+
+		// Mock services.
+		q := &mock.Quote{}
+
+		// Setup handler.
+		h := New()
+		h.Quote = q
+
+		// Make request.
+		nq := quote.NewQuote{
+			To: quote.Customer{
+				Name:        "",
+				Email:       "",
+				Address:     "",
+				CountryCode: "",
+			},
+			From: quote.Customer{
+				Name:        "contains number 42",
+				Email:       "bad_email",
+				Address:     tests.GenRandomAlpha(101), // Too long.
+				CountryCode: "bad country code",
+			},
+			Weight: 999999,
+		}
+		reqBody, err := json.Marshal(&nq)
+		is.NoErr(err)
+		r := httptest.NewRequest(http.MethodPost, "/api.v1/quotes/", bytes.NewBuffer(reqBody))
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+
+		// Assert response HTTP headers.
+		is.Equal(w.Code, http.StatusBadRequest)
+
+		// Assert response payload.
+		var resp FieldErrorResponse
+		decodePayload(is, w.Body, &resp)
+		is.Equal(resp.Code, http.StatusBadRequest)
+		is.True(!resp.Success)
+		is.Equal(len(resp.FieldErrors), 9) // All fields are invalid.
+	})
 }
 
 func createTestQuotes(numQuotes int) []quote.Info {

@@ -2,9 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
+	"github.com/johanronkko/quote-service/internal/business/validate"
 	"github.com/matryer/way"
 )
 
@@ -35,7 +37,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func respond(w http.ResponseWriter, r *http.Request, status int, data interface{}) {
 	dataenvelope := map[string]interface{}{"code": status}
 	if err, ok := data.(error); ok {
-		dataenvelope["error"] = err.Error()
+		var ferrors validate.FieldErrors
+		if errors.As(err, &ferrors) {
+			dataenvelope["error"] = ferrors
+		} else {
+			dataenvelope["error"] = err.Error()
+		}
 		dataenvelope["success"] = false
 	} else {
 		if data != nil {

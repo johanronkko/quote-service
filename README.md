@@ -18,6 +18,8 @@ Optionally, seed the database with `make seed`.
 
 ## Endpoints
 
+Every endpoint will respond with an HTTP status `code` and a `success` indicator. If an error happens, the response body will consist of an `error`field. All data is sent via a `data` field. See below examples for the endpoints.
+
 ### Healthcheck
 
 Do `GET http://localhost:3000/api.v1/healthcheck`.
@@ -105,6 +107,27 @@ Expect the following response.
     "success": true
 }
 ```
+
+A request with a bad email or name field could result in the following response body.
+
+```json
+{
+    "code": 400,
+    "error": [
+        {
+            "field": "name",
+            "error": "Key: 'NewQuote.to.name' Error:Field validation for 'name' failed on the 'personname' tag"
+        },
+        {
+            "field": "email",
+            "error": "email must be a valid email address"
+        }
+    ],
+    "success": false
+}
+```
+
+Admittedly, the response message for the "name" field isn't very nice and user friendly, but I didn't have time to fix that.
 
 ## Project Structure
 

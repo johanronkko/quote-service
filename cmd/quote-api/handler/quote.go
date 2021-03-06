@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -67,6 +68,14 @@ func (h *Handler) handleAddQuote() http.HandlerFunc {
 		var nq quote.NewQuote
 		if err := decode(w, r, &nq); err != nil {
 			respond(w, r, http.StatusBadRequest, fmt.Errorf("could not decode JSON"))
+			return
+		}
+		var ferrors validate.FieldErrors
+		if err := validate.Check(nq); errors.As(err, &ferrors) {
+			respond(w, r, http.StatusBadRequest, ferrors)
+			return
+		} else if err != nil {
+			respond(w, r, http.StatusInternalServerError, fmt.Errorf("internal server error"))
 			return
 		}
 		q, err := h.Quote.Create(r.Context(), nq)
