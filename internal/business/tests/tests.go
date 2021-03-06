@@ -85,6 +85,16 @@ func NewUnit(tb testing.TB) *sqlx.DB {
 	return db
 }
 
+// NewIntegration creates a test database inside a Docker container. It creates the
+// required table structure and seeds the database with 3 quotes.
+func NewIntegration(tb testing.TB) *sqlx.DB {
+	db := NewUnit(tb)
+	if err := schema.Seed(db); err != nil {
+		tb.Fatal(err)
+	}
+	return db
+}
+
 // GenRandomAlpha generates a string with n random alpha characters.
 func GenRandomAlpha(n int) string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
