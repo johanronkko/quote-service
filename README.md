@@ -18,11 +18,93 @@ Optionally, seed the database with `make seed`.
 
 ## Endpoints
 
-* Healthcheck:  `GET http://localhost:3000/api.v1/healthcheck`
-* List quotes:  `GET http://localhost:3000/api.v1/quotes/`
-* Quote by ID:  `GET http://localhost:3000/api.v1/quotes/:id`
-* Create quote: `POST http://localhost:3000/api.v1/quotes/`
+### Healthcheck
 
+Do `GET http://localhost:3000/api.v1/healthcheck`.
+  
+### Quote by ID  
+
+Do `GET http://localhost:3000/api.v1/quotes/1cf37266-3473-4006-984f-9325122678b7` and expect a respons with the following format.
+
+```json
+{
+    "code": 200,
+    "data": {
+        "quote": {
+            "id": "1cf37266-3473-4006-984f-9325122678b7",
+            "to": {
+                "name": "Sven Svensson",
+                "email": "sven.svensson@example.com",
+                "address": "Teststreet 42A, CityA 12345",
+                "country_code": "SE"
+            },
+            "from": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "address": "Teststreet 42B, CityB 12345",
+                "country_code": "US"
+            },
+            "weight": 45,
+            "shipment_cost": 1250
+        }
+    },
+    "success": true
+}
+```
+
+### List Quotes  
+
+Do `GET http://localhost:3000/api.v1/quotes/`.
+
+### Add quote:
+
+Do `POST http://localhost:3000/api.v1/quotes/` with a request body with the following format.
+
+```json
+{
+    "to": {
+        "name": "Hmm Hmmson",
+        "email": "hmm.hmmson@example.com",
+        "address": "Teststreet 11A, Xcity 55555",
+        "country_code": "FR"
+    },
+    "from": {
+        "name": "Wihh a",
+        "email": "wihh.a@example.com",
+        "address": "Galzstreet 1B, GalzB 77777",
+        "country_code": "NO"
+    },
+    "weight": 301
+}
+```
+
+Expect the following response.
+
+```json
+{
+    "code": 201,
+    "data": {
+        "quote": {
+            "id": "4d1046a6-647d-4d33-b31c-025c80fdaa02",
+            "to": {
+                "name": "Hmm Hmmson",
+                "email": "hmm.hmmson@example.com",
+                "address": "Teststreet 11A, Xcity 55555",
+                "country_code": "FR"
+            },
+            "from": {
+                "name": "Wihh a",
+                "email": "wihh.a@example.com",
+                "address": "Galzstreet 1B, GalzB 77777",
+                "country_code": "NO"
+            },
+            "weight": 301,
+            "shipment_cost": 2000
+        }
+    },
+    "success": true
+}
+```
 
 ## Project Structure
 
