@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	// ErrUnsupportedCountryCode occurs when a provided country code not supported.
+	// ErrUnsupportedCountryCode occurs when provided country code not supported.
 	// Country codes are expected to follow the ISO-3166-1 alpha-2 standard.
 	ErrUnsupportedCountryCode = errors.New("country code not supported")
 )
