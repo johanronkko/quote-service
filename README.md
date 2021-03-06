@@ -56,7 +56,7 @@ Do `GET http://localhost:3000/api.v1/quotes/1cf37266-3473-4006-984f-9325122678b7
 
 ### List Quotes  
 
-Do `GET http://localhost:3000/api.v1/quotes/` and expect a response with the following format.
+Do `GET http://localhost:3000/api.v1/quotes/` and expect a response body with the following format.
 
 ```json
 {
@@ -70,7 +70,7 @@ Do `GET http://localhost:3000/api.v1/quotes/` and expect a response with the fol
 
 ### Add quote:
 
-Do `POST http://localhost:3000/api.v1/quotes/` with a request body with the following format.
+Do `POST http://localhost:3000/api.v1/quotes/` with a request body of the following format.
 
 ```json
 {
@@ -90,7 +90,7 @@ Do `POST http://localhost:3000/api.v1/quotes/` with a request body with the foll
 }
 ```
 
-Expect the following response.
+Expect the following response body.
 
 ```json
 {
@@ -118,7 +118,7 @@ Expect the following response.
 }
 ```
 
-A request with a bad email or name field could result in the following response body.
+A request with bad _email_ and _name_ fields could result in the following response body.
 
 ```json
 {
@@ -137,7 +137,7 @@ A request with a bad email or name field could result in the following response 
 }
 ```
 
-Admittedly, the response message for the "name" field isn't very nice and user friendly, but I didn't have time to fix that.
+Admittedly, the response message for the _name_ field isn't very nice and user friendly, but I didn't have time to fix that.
 
 ## Project Structure
 
